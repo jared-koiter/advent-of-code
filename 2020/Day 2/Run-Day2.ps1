@@ -21,7 +21,15 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    #TODO
+    $validCount = 0
+    $parserRegex = '^(\d+)-(\d+)\s([a-z]?):\s([a-z]+)$'
+
+    foreach ($entry in $PuzzleInput) {
+        $firstIndex, $secondIndex, $letter, $password = [regex]::Match($entry, $parserRegex).Captures.Groups[1..4].Value
+        $validCount += (($password[$firstIndex - 1] -eq $letter) -xor ($password[$secondIndex - 1] -eq $letter))
+    }
+
+    return $validCount
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
