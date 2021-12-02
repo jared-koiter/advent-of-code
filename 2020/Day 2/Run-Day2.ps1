@@ -9,15 +9,7 @@ function Run-Puzzle1 {
 
     foreach ($entry in $PuzzleInput) {
         $min, $max, $letter, $password = [regex]::Match($entry, $parserRegex).Captures.Groups[1..4].Value
-        $sortedPassword = (($password -split '') | Sort-Object) -join ''
-
-        $firstIndex = $sortedPassword.IndexOf($letter)
-        if ($firstIndex -lt 0) {
-            continue
-        }
-        $lastIndex = $sortedPassword.LastIndexOf($letter)
-
-        $validCount += (($lastIndex - $firstIndex + 1) -In ($min..$max))
+        $validCount += ((($password.ToCharArray() -eq "$letter").Count) -In ($min..$max))
     }
 
     return $validCount
