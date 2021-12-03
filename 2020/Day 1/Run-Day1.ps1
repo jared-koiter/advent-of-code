@@ -6,10 +6,10 @@ function Run-Puzzle1 {
 
     $target = 2020
     $sorted = $PuzzleInput | Sort-Object
-    
+
     $botIndex = 0
     $topIndex = $sorted.Count - 1
-    
+
     $sum = $sorted[$botIndex] + $sorted[$topIndex]
     while ($sum -ne $target) {
         if ($sum -gt $target) {
@@ -43,7 +43,7 @@ function Run-Puzzle2 {
     $midIndex = $topIndex - 1
     $subTarget = $target - $sorted[$topIndex]
 
-    $sum = $sorted[$botIndex] + $sorted[$midIndex]     
+    $sum = $sorted[$botIndex] + $sorted[$midIndex]
     while ($sum -ne $subTarget) {
         if ($sum -gt $subTarget) {
             $midIndex--
