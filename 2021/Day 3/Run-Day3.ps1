@@ -2,13 +2,15 @@ function Get-MostCommonBits {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [array]$Rows
+        [array]$Rows,
+        [Parameter(Mandatory = $false)]
+        [int]$StartingIndex = 0
     )
 
     $counter = New-Object int[] ($Rows[0].Length)
     foreach ($row in $Rows) {
-        $counter = for ($i = 0; $i -lt $counter.Length; $i++) {
-            $counter[$i] + [convert]::ToInt32($row[$i], 10)
+        for ($i = $StartingIndex; $i -lt $counter.Length; $i++) {
+            $counter[$i] += [convert]::ToInt32($row[$i], 10)
         }
     }
 
