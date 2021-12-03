@@ -4,7 +4,19 @@ function Run-Puzzle1 {
         $PuzzleInput
     )
 
-    #TODO
+    $counter = New-Object int[] ($PuzzleInput[0].Length)
+    foreach ($row in $PuzzleInput) {
+        $counter = for ($i = 0; $i -lt $counter.Length; $i++) {
+            $counter[$i] + [convert]::ToInt32($row[$i], 10)
+        }
+    }
+
+    $half = [math]::Round($PuzzleInput.Count / 2)
+    $gammaRate = [convert]::ToInt64((($counter | ForEach-Object { [int]($_ -gt $half) }) -join ''), 2)
+    $mask = [convert]::ToInt64('1' * $counter.Count, 2)
+    $epsilonRate = $gammaRate -bxor $mask
+
+    return ($gammaRate * $epsilonRate)
 }
 
 function Run-Puzzle2 {
@@ -16,7 +28,7 @@ function Run-Puzzle2 {
     #TODO
 }
 
-[int[]]$puzzleInput = Get-Content .\input.txt
+[string[]]$puzzleInput = Get-Content .\input.txt
 
 $puzzle1Timer = [System.Diagnostics.Stopwatch]::StartNew()
 $output = Run-Puzzle1 -PuzzleInput $puzzleInput
