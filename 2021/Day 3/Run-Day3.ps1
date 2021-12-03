@@ -1,18 +1,28 @@
+function Get-MostCommonBits {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [array]$Rows
+    )
+
+    $counter = New-Object int[] ($Rows[0].Length)
+    foreach ($row in $Rows) {
+        $counter = for ($i = 0; $i -lt $counter.Length; $i++) {
+            $counter[$i] + [convert]::ToInt32($row[$i], 10)
+        }
+    }
+
+    $half = [math]::Round($Rows.Count / 2)
+    return (($counter | ForEach-Object { [int]($_ -gt $half) }) -join '')
+}
+
 function Run-Puzzle1 {
     [CmdletBinding()]
     param (
         $PuzzleInput
     )
 
-    $counter = New-Object int[] ($PuzzleInput[0].Length)
-    foreach ($row in $PuzzleInput) {
-        $counter = for ($i = 0; $i -lt $counter.Length; $i++) {
-            $counter[$i] + [convert]::ToInt32($row[$i], 10)
-        }
-    }
-
-    $half = [math]::Round($PuzzleInput.Count / 2)
-    $gammaRate = [convert]::ToInt64((($counter | ForEach-Object { [int]($_ -gt $half) }) -join ''), 2)
+    $gammaRate = [convert]::ToInt64((Get-MostCommonBits -Rows $PuzzleInput), 2)
     $mask = [convert]::ToInt64('1' * $counter.Count, 2)
     $epsilonRate = $gammaRate -bxor $mask
 
