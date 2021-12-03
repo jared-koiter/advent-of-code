@@ -37,8 +37,8 @@ function Run-Puzzle1 {
         $PuzzleInput
     )
 
-    $gammaRate = [convert]::ToInt64((Get-MostCommonBits -Rows $PuzzleInput), 2)
-    $mask = [convert]::ToInt64('1' * $counter.Count, 2)
+    $gammaRate = [convert]::ToInt64((Get-MostCommonBits -Rows $PuzzleInput).MostCommonBits, 2)
+    $mask = [convert]::ToInt64('1' * $PuzzleInput[0].Length, 2)
     $epsilonRate = $gammaRate -bxor $mask
 
     return ($gammaRate * $epsilonRate)
