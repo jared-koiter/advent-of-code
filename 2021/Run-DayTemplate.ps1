@@ -4,7 +4,7 @@ function Run-Puzzle1 {
         $PuzzleInput
     )
 
-   #TODO
+    #TODO
 }
 
 function Run-Puzzle2 {
