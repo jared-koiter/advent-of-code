@@ -50,7 +50,37 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    #TODO
+    $oxyList = $PuzzleInput
+    $co2List = $PuzzleInput
+    foreach ($i in (0..($PuzzleInput[0].Length - 1))) {
+        if ($oxyList.Count -gt 1) {
+            $bitData = Get-MostCommonBits -Rows $oxyList -StartIndex $i -EndIndex $i
+            $bitSelector = if ($bitData.OneBitCounts[$i] -eq ($oxyList.Count / 2)) { '1' } else { $bitData.MostCommonBits[$i] }
+            $oxyList = $oxyList | Where-Object { $_[$i] -eq $bitSelector }
+        }
+
+        if ($co2List.Count -gt 1) {
+            $bitData = Get-MostCommonBits -Rows $co2List -StartIndex $i -EndIndex $i
+            $bitSelector = if ($bitData.OneBitCounts[$i] -eq ($co2List.Count / 2)) { '1' } else { $bitData.MostCommonBits[$i] }
+            $co2List = $co2List | Where-Object { $_[$i] -ne $bitSelector }
+        }
+
+        if ($oxyList.Count -eq 1 -and $co2List.Count -eq 1) {
+            $oxyValue = [convert]::ToInt64($oxyList, 2)
+            $co2Value = [convert]::ToInt64($co2List, 2)
+            break
+        }
+
+        if (($oxyList.Count -eq 0) -or ($co2List.Count -eq 0)) {
+            throw "eliminated all entries without finding value"
+        }
+    }
+
+    if ((-not $oxyValue) -or (-not $co2Value)) {
+        throw "didn't find a unique value"
+    }
+
+    return ($oxyValue * $co2Value)
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
