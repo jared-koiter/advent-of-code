@@ -25,8 +25,10 @@ function Get-MostCommonBits {
         }
     }
 
-    $half = [math]::Round($Rows.Count / 2)
-    return (($counter | ForEach-Object { [int]($_ -gt $half) }) -join '')
+    return @{
+        MostCommonBits = (($counter | ForEach-Object { [int]($_ -ge ($Rows.Count - $_)) }) -join '')
+        OneBitCounts = $counter
+    }
 }
 
 function Run-Puzzle1 {
