@@ -4,12 +4,23 @@ function Get-MostCommonBits {
         [Parameter(Mandatory = $true)]
         [array]$Rows,
         [Parameter(Mandatory = $false)]
-        [int]$StartingIndex = 0
+        $StartIndex = 0,
+        [Parameter(Mandatory = $false)]
+        $EndIndex
     )
 
-    $counter = New-Object int[] ($Rows[0].Length)
+    $rowLength = $Rows[0].Length
+    if ($EndIndex -eq $null) {
+        $EndIndex = $rowLength - 1
+    }
+
+    if ($EndIndex -ge $rowLength -or $EndIndex -lt $StartIndex) {
+        throw "invalid index input"
+    }
+
+    $counter = New-Object int[] $rowLength
     foreach ($row in $Rows) {
-        for ($i = $StartingIndex; $i -lt $counter.Length; $i++) {
+        for ($i = $StartIndex; $i -le $EndIndex; $i++) {
             $counter[$i] += [convert]::ToInt32($row[$i], 10)
         }
     }
