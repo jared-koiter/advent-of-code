@@ -52,7 +52,21 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    # TODO
+    $seatIds = ($PuzzleInput | Get-SeatId) | Sort-Object
+
+    $minSeatId = $seatIds[0]
+    for ($i = 1; $i -lt ($seatIds.Count - 1); $i++) {
+        $expectedSeatId = $minSeatId + $i
+        if ($seatIds[$i] -ne $expectedSeatId) {
+            break
+        }
+    }
+
+    if (-not $expectedSeatId) {
+        throw "no missing seats found"
+    }
+
+    return $expectedSeatId
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
