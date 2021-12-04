@@ -42,16 +42,7 @@ function Run-Puzzle1 {
     param (
         $PuzzleInput
     )
-
-    $maxSeatId = -1
-    foreach ($seatCode in $PuzzleInput) {
-        $seatId = Get-SeatId -SeatCode $seatCode
-        if ($seatId -gt $maxSeatId) {
-            $maxSeatId = $seatId
-        }
-    }
-
-    return $maxSeatId
+    return (($PuzzleInput | Get-SeatId) | Measure -Maximum).Maximum
 }
 
 function Run-Puzzle2 {
