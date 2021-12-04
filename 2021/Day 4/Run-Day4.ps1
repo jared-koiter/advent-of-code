@@ -51,7 +51,8 @@ function Set-DrawMarks {
     param (
         $NumberBoard,
         $MarkedBoard,
-        $Draw
+        $Draw,
+        $Mark
     )
 
     for ($rowNum = 0; $rowNum -lt $NumberBoard.Count; $rowNum++) {
@@ -59,7 +60,7 @@ function Set-DrawMarks {
         $row = $MarkedBoard[$rowNum] | ForEach-Object { $_ }
         for ($colNum = 0; $colNum -lt $row.Count; $colNum++) {
             if ($NumberBoard[$rowNum][$colNum] -eq $Draw) {
-                $row[$colNum] = 1
+                $row[$colNum] = $Mark
             }
         }
         $MarkedBoard[$rowNum] = $row
@@ -143,7 +144,7 @@ function Run-Puzzle1 {
         $draw = $draws[$drawNum]
 
         for ($boardNum = 0; $boardNum -lt $boards.Count; $boardNum++) {
-            $markedBoards[$boardNum] = Set-DrawMarks -NumberBoard $boards[$boardNum] -MarkedBoard ($markedBoards[$boardNum] | ForEach-Object { , $_ }) -Draw $draw
+            $markedBoards[$boardNum] = Set-DrawMarks -NumberBoard $boards[$boardNum] -MarkedBoard ($markedBoards[$boardNum] | ForEach-Object { , $_ }) -Draw $draw -Mark 1
         }
     }
 
@@ -156,7 +157,7 @@ function Run-Puzzle1 {
     for ($drawNum = 5; $drawNum -lt $draws.Count; $drawNum++) {
         $draw = $draws[$drawNum]
         for ($boardNum = 0; $boardNum -lt $boards.Count; $boardNum++) {
-            $markedBoards[$boardNum] = Set-DrawMarks -NumberBoard $boards[$boardNum] -MarkedBoard ($markedBoards[$boardNum] | ForEach-Object { , $_ }) -Draw $draw
+            $markedBoards[$boardNum] = Set-DrawMarks -NumberBoard $boards[$boardNum] -MarkedBoard ($markedBoards[$boardNum] | ForEach-Object { , $_ }) -Draw $draw -Mark 1
             if (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum]) {
                 Print-Board $boards[$boardNum]
                 Print-Board $markedBoards[$boardNum]
