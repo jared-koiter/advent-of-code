@@ -42,6 +42,7 @@ function Run-Puzzle1 {
     param (
         $PuzzleInput
     )
+
     return (($PuzzleInput | Get-SeatId) | Measure -Maximum).Maximum
 }
 
