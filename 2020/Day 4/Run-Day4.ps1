@@ -153,7 +153,24 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    #TODO
+    $validCount = 0
+    $data = @()
+    foreach ($line in $PuzzleInput) {
+        if ($line) {
+            $data += ($line -split ' ')
+        }
+        else {
+            $validCount += Validate-PassportComplex -RawData $data
+            $data = @()
+        }
+    }
+
+    # validate any remaining data in case there was some left over at the end
+    if ($data) {
+        $validCount += Validate-PassportComplex -RawData $data
+    }
+
+    return $validCount
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
