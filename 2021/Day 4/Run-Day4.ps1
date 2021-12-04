@@ -159,9 +159,6 @@ function Run-Puzzle1 {
         for ($boardNum = 0; $boardNum -lt $boards.Count; $boardNum++) {
             $markedBoards[$boardNum] = Set-DrawMarks -NumberBoard $boards[$boardNum] -MarkedBoard ($markedBoards[$boardNum] | ForEach-Object { , $_ }) -Draw $draw -Mark 1
             if (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum]) {
-                Print-Board $boards[$boardNum]
-                Print-Board $markedBoards[$boardNum]
-                Write-Host $draw
                 return Get-BoardScore -NumberBoard $boards[$boardNum] -MarkedBoard $markedBoards[$boardNum] -Draw $draw
             }
         }
