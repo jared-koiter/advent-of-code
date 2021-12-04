@@ -170,6 +170,40 @@ function Run-Puzzle2 {
     param (
         $PuzzleInput
     )
+
+    $boardDimension = 5
+    $draws = $PuzzleInput[0] -split ','
+
+    # parse the rest of the file to get the various board states
+    $boards = Get-BoardData -BoardInput ($PuzzleInput | Select-Object -Skip 2) -BoardDimension $boardDimension
+    $markedBoards = ,(,(,0 * $boardDimension) * $boardDimension) * $boards.Count
+
+    # play through the entire set to determine the final board states
+    for ($drawNum = 0; $drawNum -lt $draws.Count; $drawNum++) {
+        $draw = $draws[$drawNum]
+        for ($boardNum = 0; $boardNum -lt $boards.Count; $boardNum++) {
+            $markedBoards[$boardNum] = Set-DrawMarks -NumberBoard $boards[$boardNum] -MarkedBoard ($markedBoards[$boardNum] | ForEach-Object { , $_ }) -Draw $draw -Mark 1
+        }
+    }
+
+    # verify that there isn't already a puzzle that didn't win
+    for ($boardNum = ($boards.Count - 1); $boardNum -ge 0; $boardNum--) {
+        if (-not (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum])) {
+            return Get-BoardScore -NumberBoard $boards[$boardNum] -MarkedBoard $markedBoards[$boardNum] -Draw $draw
+        }
+    }
+
+    # play backwards to determine which puzzle won last
+    for ($drawNum = ($draws.Count - 1); $drawNum -ge 0; $drawNum--) {
+        $draw = $draws[$drawNum]
+        for ($boardNum = ($boards.Count - 1); $boardNum -ge 0; $boardNum--) {
+            $afterMarkedBoard = ($markedBoards[$boardNum] | ForEach-Object { , $_ })
+            $markedBoards[$boardNum] = Set-DrawMarks -NumberBoard $boards[$boardNum] -MarkedBoard ($markedBoards[$boardNum] | ForEach-Object { , $_ }) -Draw $draw -Mark 0
+            if (-not (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum])) {
+                return Get-BoardScore -NumberBoard $boards[$boardNum] -MarkedBoard $afterMarkedBoard -Draw $draw
+            }
+        }
+    }
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
