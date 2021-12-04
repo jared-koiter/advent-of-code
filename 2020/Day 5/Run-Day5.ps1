@@ -30,9 +30,11 @@ function Get-SeatId {
         [string] $SeatCode
     )
 
-    $rowNumber = Get-RowColumnNumber -Code $SeatCode[0..6] -MinValue 0 -MaxValue 127
-    $colNumber = Get-RowColumnNumber -Code $SeatCode[7..9] -MinValue 0 -MaxValue 7
-    return ($rowNumber * 8 + $colNumber)
+    process {
+        $rowNumber = Get-RowColumnNumber -Code $SeatCode[0..6] -MinValue 0 -MaxValue 127
+        $colNumber = Get-RowColumnNumber -Code $SeatCode[7..9] -MinValue 0 -MaxValue 7
+        return ($rowNumber * 8 + $colNumber)
+    }
 }
 
 function Run-Puzzle1 {
