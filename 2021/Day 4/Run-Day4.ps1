@@ -10,13 +10,9 @@ function Get-BoardData {
     for ($i = 0; $i -le $BoardInput.Count; $i++) {
         $line = $BoardInput[$i]
         if ($line) {
-            $board += ,($line.Trim() -split '\s+')
+            $board += ($line.Trim() -split '\s+')
         }
         else {
-            if ($board.Count -ne $BoardDimension) {
-                throw "incomplete board data, can't parse input"
-            }
-
             $boards += ,$board
             $board = @()
         }
@@ -32,11 +28,11 @@ function Print-Board {
         $Board
     )
 
-    for ($rowNum = 0; $rowNum -lt $Board.Count; $rowNum++) {
-        for ($colNum = 0; $colNum -lt $Board.Count; $colNum++) {
-            Write-Host "$($Board[$rowNum][$colNum]) " -NoNewline
-        }
-        Write-Host
+    $boardDimension = [Math]::Sqrt($Board.Count)
+
+    for ($i = 0; $i -lt $Board.Count; $i++) {
+        Write-Host "$($Board[$i]) " -NoNewline
+        if (-not (($i+1) % $boardDimension)) { Write-Host }
     }
 }
 
@@ -49,19 +45,9 @@ function Set-DrawMarks {
         $Mark
     )
 
-    # flatten 2D into 1D
-    $boardDimension = $NumberBoard.Count
-    $flatNumberBoard = $NumberBoard | ForEach-Object { $_ }
-    $flatMarkedBoard = $MarkedBoard | ForEach-Object { $_ }
-
-    for ($i = 0; $i -lt $flatNumberBoard.Count; $i++) {
-        if ($flatNumberBoard[$i] -eq $Draw) {
-            $flatMarkedBoard[$i] = $Mark
-
-            # update marked board
-            $rowNum = [Math]::Floor($i / $boardDimension)
-            $rowStart = $rowNum * $boardDimension
-            $MarkedBoard[$rowNum] = $flatMarkedBoard[$rowStart..($rowStart + ($boardDimension - 1))]
+    for ($i = 0; $i -lt $NumberBoard.Count; $i++) {
+        if ($NumberBoard[$i] -eq $Draw) {
+            $MarkedBoard[$i] = $Mark
         }
     }
 
@@ -71,15 +57,21 @@ function Set-DrawMarks {
 function Check-BoardForBingo {
     [CmdletBinding()]
     param (
-        $MarkedBoard
+        $MarkedBoard,
+        $BoardDimension
     )
 
     $winner = $false
-    $count = $MarkedBoard.Count
 
     # check for row wins
-    for ($row = 0; $row -lt $count; $row++) {
-        if (($MarkedBoard[$row] | Measure-Object -Sum).Sum -eq $count) {
+    for ($row = 0; $row -lt $BoardDimension; $row++) {
+        $sum = 0
+        $startIndex = $row * $BoardDimension
+        for ($i = $startIndex; $i -lt ($startIndex + $BoardDimension); $i++) {
+            $sum += $MarkedBoard[$i]
+        }
+
+        if ($sum -eq $BoardDimension) {
             $winner = $true
             break
         }
@@ -90,13 +82,13 @@ function Check-BoardForBingo {
     }
 
     # check for column wins
-    for ($col = 0; $col -lt $count; $col++) {
+    for ($col = 0; $col -lt $BoardDimension; $col++) {
         $sum = 0
-        for ($row = 0; $row -lt $count; $row++) {
-            $sum += $MarkedBoard[$row][$col]
+        for ($i = $col; $i -lt $MarkedBoard.Count; $i += $BoardDimension) {
+            $sum += $MarkedBoard[$i]
         }
 
-        if ($sum -eq $count) {
+        if ($sum -eq $BoardDimension) {
             $winner = $true
             break
         }
@@ -114,11 +106,9 @@ function Get-BoardScore {
     )
 
     $sum = 0
-    for ($rowNum = 0; $rowNum -lt $MarkedBoard.Count; $rowNum++) {
-        for ($colNum = 0; $colNum -lt $MarkedBoard.Count; $colNum++) {
-            if (-not ($MarkedBoard[$rowNum][$colNum])) {
-                $sum += $NumberBoard[$rowNum][$colNum]
-            }
+    for ($i = 0; $i -lt $NumberBoard.Count; $i++) {
+        if (-not ($MarkedBoard[$i])) {
+            $sum += $NumberBoard[$i]
         }
     }
 
@@ -136,19 +126,18 @@ function Run-Puzzle1 {
 
     # parse the rest of the file to get the various board states
     $boards = Get-BoardData -BoardInput ($PuzzleInput | Select-Object -Skip 2) -BoardDimension $boardDimension
-    $markedBoards = ,(,(,0 * $boardDimension) * $boardDimension) * $boards.Count
+    $markedBoards = ,(,0 * ($boardDimension * $boardDimension)) * $boards.Count
 
     # draw the initial 5 without checking for bingos
     for ($drawNum = 0; $drawNum -le 4; $drawNum++) {
         $draw = $draws[$drawNum]
-
         for ($boardNum = 0; $boardNum -lt $boards.Count; $boardNum++) {
             $markedBoards[$boardNum] = Set-DrawMarks -NumberBoard $boards[$boardNum] -MarkedBoard ($markedBoards[$boardNum] | ForEach-Object { , $_ }) -Draw $draw -Mark 1
         }
     }
 
     for ($boardNum = 0; $boardNum -lt $boards.Count; $boardNum++) {
-        if (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum]) {
+        if (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum] -BoardDimension $boardDimension) {
             return Get-BoardScore -NumberBoard $boards[$boardNum] -MarkedBoard $markedBoards[$boardNum] -Draw $draw
         }
     }
@@ -157,7 +146,7 @@ function Run-Puzzle1 {
         $draw = $draws[$drawNum]
         for ($boardNum = 0; $boardNum -lt $boards.Count; $boardNum++) {
             $markedBoards[$boardNum] = Set-DrawMarks -NumberBoard $boards[$boardNum] -MarkedBoard ($markedBoards[$boardNum] | ForEach-Object { , $_ }) -Draw $draw -Mark 1
-            if (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum]) {
+            if (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum] -BoardDimension $boardDimension) {
                 return Get-BoardScore -NumberBoard $boards[$boardNum] -MarkedBoard $markedBoards[$boardNum] -Draw $draw
             }
         }
@@ -175,7 +164,7 @@ function Run-Puzzle2 {
 
     # parse the rest of the file to get the various board states
     $boards = Get-BoardData -BoardInput ($PuzzleInput | Select-Object -Skip 2) -BoardDimension $boardDimension
-    $markedBoards = ,(,(,0 * $boardDimension) * $boardDimension) * $boards.Count
+    $markedBoards = ,(,0 * ($boardDimension * $boardDimension)) * $boards.Count
 
     # play through the entire set to determine the final board states
     for ($drawNum = 0; $drawNum -lt $draws.Count; $drawNum++) {
@@ -187,7 +176,7 @@ function Run-Puzzle2 {
 
     # verify that there isn't already a puzzle that didn't win
     for ($boardNum = ($boards.Count - 1); $boardNum -ge 0; $boardNum--) {
-        if (-not (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum])) {
+        if (-not (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum] -BoardDimension $boardDimension)) {
             return Get-BoardScore -NumberBoard $boards[$boardNum] -MarkedBoard $markedBoards[$boardNum] -Draw $draw
         }
     }
@@ -198,7 +187,7 @@ function Run-Puzzle2 {
         for ($boardNum = ($boards.Count - 1); $boardNum -ge 0; $boardNum--) {
             $afterMarkedBoard = ($markedBoards[$boardNum] | ForEach-Object { , $_ })
             $markedBoards[$boardNum] = Set-DrawMarks -NumberBoard $boards[$boardNum] -MarkedBoard ($markedBoards[$boardNum] | ForEach-Object { , $_ }) -Draw $draw -Mark 0
-            if (-not (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum])) {
+            if (-not (Check-BoardForBingo -MarkedBoard $markedBoards[$boardNum] -BoardDimension $boardDimension)) {
                 return Get-BoardScore -NumberBoard $boards[$boardNum] -MarkedBoard $afterMarkedBoard -Draw $draw
             }
         }
