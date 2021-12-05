@@ -37,7 +37,40 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    # TODO
+    $mapDimension = 1000
+    $map = New-Object 'int [,]' $mapDimension, $mapDimension
+    $coordRegex = '^(\d+),(\d+) -> (\d+),(\d+)$'
+    $dangerCount = 0
+
+    foreach ($line in $PuzzleInput) {
+        $x1, $y1, $x2, $y2 = [regex]::Match($line, $coordRegex).Captures.Groups[1..4].Value
+
+        $xDiff = [Math]::Abs($x1 - $x2)
+        $yDiff = [Math]::Abs($y1 - $y2)
+
+        if ($xDiff) {
+            $xRange = $x1..$x2
+        }
+        else {
+            $xRange = ,$x1 * ($yDiff + 1)
+        }
+
+        if ($yDiff) {
+            $yRange = $y1..$y2
+        }
+        else {
+            $yRange = ,$y1 * ($xDiff + 1)
+        }
+
+        for ($i = 0; $i -lt $xRange.Count; $i++) {
+            $map[$xRange[$i],$yRange[$i]] += 1
+            if ($map[$xRange[$i],$yRange[$i]] -eq 2) {
+                $dangerCount++
+            }
+        }
+    }
+
+    return $dangerCount
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
