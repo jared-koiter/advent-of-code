@@ -14,8 +14,11 @@ function Run-Puzzle1 {
         
         # ignore diagonals in puzzle 1
         if ($x1 -eq $x2 -or $y1 -eq $y2) {
-            foreach ($x in ($x1..$x2)) {
-                foreach ($y in ($y1..$y2)) {
+            $xRange = $x1..$x2
+            $yRange = $y1..$y2
+
+            foreach ($x in $xRange) {
+                foreach ($y in $yRange) {
                     $map[$x,$y] += 1
                     if ($map[$x,$y] -eq 2) {
                         $dangerCount++
