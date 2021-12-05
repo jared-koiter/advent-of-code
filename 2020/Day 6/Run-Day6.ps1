@@ -26,7 +26,27 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    #TODO
+    $sum = 0
+    $groupInput = @()
+    for ($i = 0; $i -le $PuzzleInput.Count; $i++) {
+        $line = $PuzzleInput[$i]
+        if ($line) {
+            $groupInput += ,$line.ToCharArray()
+        }
+        else {
+            $sameAnswers = $groupInput[0]
+            for ($j = 1; $j -lt $groupInput.Count; $j++) {
+                $sameAnswers = $sameAnswers | Where-Object { $groupInput[$j] -contains $_ }
+                if (-not $sameAnswers) {
+                    break
+                }
+            }
+            $sum += $sameAnswers.Count
+            $groupInput = @()
+        }
+    }
+
+    return $sum
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
