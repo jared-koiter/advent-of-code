@@ -10,7 +10,7 @@ function Run-Puzzle1 {
     $dangerCount = 0
 
     foreach ($line in $PuzzleInput) {
-        $x1, $y1, $x2, $y2 = [regex]::Match($line, $coordRegex).Captures.Groups[1..4].Value
+        [int]$x1, [int]$y1, [int]$x2, [int]$y2 = [regex]::Match($line, $coordRegex).Captures.Groups[1..4].Value
         
         # ignore diagonals in puzzle 1
         if ($x1 -eq $x2 -or $y1 -eq $y2) {
@@ -43,7 +43,7 @@ function Run-Puzzle2 {
     $dangerCount = 0
 
     foreach ($line in $PuzzleInput) {
-        $x1, $y1, $x2, $y2 = [regex]::Match($line, $coordRegex).Captures.Groups[1..4].Value
+        [int]$x1, [int]$y1, [int]$x2, [int]$y2 = [regex]::Match($line, $coordRegex).Captures.Groups[1..4].Value
 
         $xDiff = [Math]::Abs($x1 - $x2)
         $yDiff = [Math]::Abs($y1 - $y2)
