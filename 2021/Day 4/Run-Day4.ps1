@@ -6,25 +6,19 @@ function Get-BoardData {
     )
 
     $boards = @()
-
-    $boardLines = @()
-    foreach ($i in (0..($BoardInput.Count-1))) {
+    $board = @()
+    for ($i = 0; $i -le $BoardInput.Count; $i++) {
         $line = $BoardInput[$i]
         if ($line) {
-            $boardLines += $line
+            $board += ,($line -split '\s+')
         }
-        if (-not $line -or ($i -eq ($BoardInput.Count-1))) {
-            if ($boardLines.Count -ne $BoardDimension) {
-                throw "incomplete board data, can't parse"
-            }
-
-            $board = @()
-            foreach ($boardLine in $boardLines) {
-                $board += ,(($boardLine -split ' ') | Where-Object { $_ })
+        else {
+            if ($board.Count -ne $BoardDimension) {
+                throw "incomplete board data, can't parse input"
             }
 
             $boards += ,$board
-            $boardLines = @()
+            $board = @()
         }
     }
 
