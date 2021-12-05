@@ -10,7 +10,7 @@ function Get-BoardData {
     for ($i = 0; $i -le $BoardInput.Count; $i++) {
         $line = $BoardInput[$i]
         if ($line) {
-            $board += ,($line -split '\s+')
+            $board += ,($line.Trim() -split '\s+')
         }
         else {
             if ($board.Count -ne $BoardDimension) {
