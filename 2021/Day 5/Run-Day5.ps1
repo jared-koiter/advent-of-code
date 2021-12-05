@@ -13,19 +13,13 @@ function Run-Puzzle1 {
         $x1, $y1, $x2, $y2 = [regex]::Match($line, $coordRegex).Captures.Groups[1..4].Value
         
         # ignore diagonals in puzzle 1
-        if ($x1 -eq $x2) {
-            foreach ($y in ($y1..$y2)) {
-                $map[$x1,$y] += 1
-                if ($map[$x1,$y] -eq 2) {
-                    $dangerCount++
-                }
-            }
-        }
-        elseif ($y1 -eq $y2) {
+        if ($x1 -eq $x2 -or $y1 -eq $y2) {
             foreach ($x in ($x1..$x2)) {
-                $map[$x,$y1] += 1
-                if ($map[$x,$y1] -eq 2) {
-                    $dangerCount++
+                foreach ($y in ($y1..$y2)) {
+                    $map[$x,$y] += 1
+                    if ($map[$x,$y] -eq 2) {
+                        $dangerCount++
+                    }
                 }
             }
         }
