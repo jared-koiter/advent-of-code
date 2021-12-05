@@ -49,15 +49,20 @@ function Set-DrawMarks {
         $Mark
     )
 
-    for ($rowNum = 0; $rowNum -lt $NumberBoard.Count; $rowNum++) {
-        # deep copy to avoid overwriting *all* rows in the board at the same time
-        $row = $MarkedBoard[$rowNum] | ForEach-Object { $_ }
-        for ($colNum = 0; $colNum -lt $row.Count; $colNum++) {
-            if ($NumberBoard[$rowNum][$colNum] -eq $Draw) {
-                $row[$colNum] = $Mark
-            }
+    # flatten 2D into 1D
+    $boardDimension = $NumberBoard.Count
+    $flatNumberBoard = $NumberBoard | ForEach-Object { $_ }
+    $flatMarkedBoard = $MarkedBoard | ForEach-Object { $_ }
+
+    for ($i = 0; $i -lt $flatNumberBoard.Count; $i++) {
+        if ($flatNumberBoard[$i] -eq $Draw) {
+            $flatMarkedBoard[$i] = $Mark
+
+            # update marked board
+            $rowNum = [Math]::Floor($i / $boardDimension)
+            $rowStart = $rowNum * $boardDimension
+            $MarkedBoard[$rowNum] = $flatMarkedBoard[$rowStart..($rowStart + ($boardDimension - 1))]
         }
-        $MarkedBoard[$rowNum] = $row
     }
 
     return $MarkedBoard
