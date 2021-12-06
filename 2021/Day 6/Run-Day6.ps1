@@ -5,23 +5,21 @@ function Get-FishCount {
         $NumberOfDays
     )
 
-    [int[]]$fishCounters = $InitialFishCounts -split ','
-    
+    [int[]]$fishCounts = $InitialFishCounts -split ','
+    $maxFishDays = 9
+    $fishBuckets = ,0 * $maxFishDays
+    $fishCounts | ForEach-Object { $fishBuckets[$_]++ }
+
     for ($day = 0; $day -lt $NumberOfDays; $day++) {
-        $newFish = 0
-        for ($fishId = 0; $fishId -lt $fishCounters.Count; $fishId++) {
-            if ($fishCounters[$fishId] -eq 0) {
-                $fishCounters[$fishId] = 6
-                $newFish++
-            }
-            else {
-                $fishCounters[$fishId]--
-            }
+        $newFish = $fishBuckets[0]
+        for ($fishBucketId = 1; $fishBucketId -lt $maxFishDays; $fishBucketId++) {
+            $fishBuckets[$fishBucketId - 1] = $fishBuckets[$fishBucketId]
         }
-        $fishCounters += ,8 * $newFish
+        $fishBuckets[6] += $newFish
+        $fishBuckets[8] = $newFish
     }
 
-    return $fishCounters.Count
+    return ($fishBuckets | Measure-Object -Sum).Sum
 }
 
 function Run-Puzzle1 {
