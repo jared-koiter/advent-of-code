@@ -36,18 +36,14 @@ function Run-Puzzle1 {
     )
 
     [int[]]$numbers = $PuzzleInput -split ','
-    $measurement = $numbers | Measure-Object -Maximum -Minimum
 
-    $minimumCost = [int]::MaxValue
-    foreach ($position in ($measurement.Minimum..$measurement.Maximum)) {
-        $fuelCost = Get-SimpleFuelCost -StartingPositions $numbers -Target $position
-        if ($fuelCost -lt $minimumCost) {
-            Write-Warning "$position has a fuelCost of $fuelCost"
-            $minimumCost = $fuelCost
-        }
-    }
-
-    return $minimumCost    
+    # check only median value and surrounding values
+    $medianPosition = (($numbers | Sort-Object)[ [int](($numbers.count -1) / 2)])
+    return ((
+        (Get-SimpleFuelCost -StartingPositions $numbers -Target $medianPosition),
+        (Get-SimpleFuelCost -StartingPositions $numbers -Target ($medianPosition + 1)),
+        (Get-SimpleFuelCost -StartingPositions $numbers -Target ($medianPosition - 1))
+    ) | Measure-Object -Minimum).Minimum
 }
 
 function Run-Puzzle2 {
@@ -57,21 +53,14 @@ function Run-Puzzle2 {
     )
 
     [int[]]$numbers = $PuzzleInput -split ','
-    #$average = [Math]::Round(($numbers | Measure-Object -Average).Average, 0)
-    #return Get-ComplexFuelCost -StartingPositions $numbers -Target $average
 
-    $measurement = $numbers | Measure-Object -Maximum -Minimum
-
-    $minimumCost = [int]::MaxValue
-    foreach ($position in ($measurement.Minimum..$measurement.Maximum)) {
-        $fuelCost = Get-ComplexFuelCost -StartingPositions $numbers -Target $position
-        if ($fuelCost -lt $minimumCost) {
-            Write-Warning "$position has a fuelCost of $fuelCost"
-            $minimumCost = $fuelCost
-        }
-    }
-
-    return $minimumCost  
+    # check only average value and surrounding values
+    $averagePosition = [Math]::Round(($numbers | Measure-Object -Average).Average, 0)
+    return ((
+        (Get-ComplexFuelCost -StartingPositions $numbers -Target $averagePosition),
+        (Get-ComplexFuelCost -StartingPositions $numbers -Target ($averagePosition + 1)),
+        (Get-ComplexFuelCost -StartingPositions $numbers -Target ($averagePosition - 1))
+    ) | Measure-Object -Minimum).Minimum
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
