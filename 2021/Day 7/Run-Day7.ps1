@@ -57,6 +57,9 @@ function Run-Puzzle2 {
     )
 
     [int[]]$numbers = $PuzzleInput -split ','
+    #$average = [Math]::Round(($numbers | Measure-Object -Average).Average, 0)
+    #return Get-ComplexFuelCost -StartingPositions $numbers -Target $average
+
     $measurement = $numbers | Measure-Object -Maximum -Minimum
 
     $minimumCost = [int]::MaxValue
