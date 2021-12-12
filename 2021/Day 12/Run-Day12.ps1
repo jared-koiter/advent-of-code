@@ -45,14 +45,14 @@ function Get-PathsFromNode {
         [Parameter(Mandatory = $true)]
         $Node,
         [Parameter(Mandatory = $false)]
-        [array]$Visited = @()
+        [array]$VisitedSmallCaves = @()
     )
 
     if ($Node -eq 'end') {
         return @('end')
     }
 
-    $Visited += $Node
+    $VisitedSmallCaves += $Node
 
     $paths = @()
     foreach ($connection in $Caves.$Node.Connections) {
@@ -61,7 +61,7 @@ function Get-PathsFromNode {
             continue
         }
 
-        [array]$possiblePaths = @(Get-PathsFromNode -Caves $Caves -Node $connection -Visited ($Visited | ForEach-Object { $_ }))
+        [array]$possiblePaths = @(Get-PathsFromNode -Caves $Caves -Node $connection -VisitedSmallCaves ($Visited | ForEach-Object { $_ }))
 
         # append the current node to child paths to return all possible combinations
         foreach ($possiblePath in $possiblePaths) {
