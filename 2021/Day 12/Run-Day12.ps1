@@ -45,23 +45,41 @@ function Get-PathsFromNode {
         [Parameter(Mandatory = $true)]
         $Node,
         [Parameter(Mandatory = $false)]
-        [array]$VisitedSmallCaves = @()
+        [array]$VisitedSmallCaves = @(),
+        [Parameter(Mandatory = $false)]
+        $UsedDoubleRevisit = $false
     )
 
     if ($Node -eq 'end') {
-        return @('end')
+        return @('end') # always end chain at end cave
     }
 
-    $VisitedSmallCaves += $Node
+    if ($VisitedSmallCaves -ccontains $Node) {
+        if ($UsedDoubleRevisit) {
+            return @() # already used our double visit chance, don't process node further
+        }
+        else {
+            $UsedDoubleRevisit = $true
+        }
+    }
+
+    # only record visits to small caves
+    if (-not $Caves.$Node.IsLarge) {
+        $VisitedSmallCaves += $Node
+    }
 
     $paths = @()
     foreach ($connection in $Caves.$Node.Connections) {
-        # don't check visited small caves
-        if ($Visited -ccontains $connection -and (-not $Caves.$connection.IsLarge)) {
+        # never revisit the start cave
+        if ($connection -eq 'start') {
             continue
         }
 
-        [array]$possiblePaths = @(Get-PathsFromNode -Caves $Caves -Node $connection -VisitedSmallCaves ($Visited | ForEach-Object { $_ }))
+        if ($UsedDoubleRevisit -and $VisitedSmallCaves -ccontains $connection) {
+            continue
+        }
+
+        [array]$possiblePaths = @(Get-PathsFromNode -Caves $Caves -Node $connection -VisitedSmallCaves ($VisitedSmallCaves | ForEach-Object { $_ }) -UsedDoubleRevisit $UsedDoubleRevisit)
 
         # append the current node to child paths to return all possible combinations
         foreach ($possiblePath in $possiblePaths) {
@@ -79,7 +97,7 @@ function Run-Puzzle1 {
     )
 
     $caves = Get-CaveConnections -Connections $PuzzleInput
-    $paths = Get-PathsFromNode -Caves $caves -Node 'start'
+    $paths = Get-PathsFromNode -Caves $caves -Node 'start' -UsedDoubleRevisit $true
 
     return $paths.Count
 }
@@ -90,7 +108,10 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    #TODO
+    $caves = Get-CaveConnections -Connections $PuzzleInput
+    $paths = Get-PathsFromNode -Caves $caves -Node 'start' -UsedDoubleRevisit $false
+
+    return $paths.Count
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
