@@ -90,6 +90,54 @@ function Get-PathsFromNode {
     return $paths
 }
 
+function Get-PathCountFromNode {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        $Caves,
+        [Parameter(Mandatory = $true)]
+        $Node,
+        [Parameter(Mandatory = $false)]
+        [array]$VisitedSmallCaves = @(),
+        [Parameter(Mandatory = $false)]
+        $UsedDoubleRevisit = $false
+    )
+
+    if ($Node -eq 'end') {
+        return 1 # always end chain at end cave
+    }
+
+    if ($VisitedSmallCaves -ccontains $Node) {
+        if ($UsedDoubleRevisit) {
+            return 0 # already used our double visit chance, don't process node further
+        }
+        else {
+            $UsedDoubleRevisit = $true
+        }
+    }
+
+    # only record visits to small caves
+    if ($Caves.$Node.IsSmall) {
+        $VisitedSmallCaves += $Node
+    }
+
+    $pathCount = 0
+    foreach ($connection in $Caves.$Node.Connections) {
+        # never revisit the start cave
+        if ($connection -eq 'start') {
+            continue
+        }
+
+        if ($UsedDoubleRevisit -and $VisitedSmallCaves -ccontains $connection) {
+            continue
+        }
+
+        $pathCount += Get-PathCountFromNode -Caves $Caves -Node $connection -VisitedSmallCaves ($VisitedSmallCaves | ForEach-Object { $_ }) -UsedDoubleRevisit $UsedDoubleRevisit
+    }
+
+    return $pathCount
+}
+
 function Run-Puzzle1 {
     [CmdletBinding()]
     param (
@@ -97,9 +145,9 @@ function Run-Puzzle1 {
     )
 
     $caves = Get-CaveConnections -Connections $PuzzleInput
-    $paths = Get-PathsFromNode -Caves $caves -Node 'start' -UsedDoubleRevisit $true
+    $pathCount = Get-PathCountFromNode -Caves $caves -Node 'start' -UsedDoubleRevisit $true
 
-    return $paths.Count
+    return $pathCount
 }
 
 function Run-Puzzle2 {
@@ -109,9 +157,9 @@ function Run-Puzzle2 {
     )
 
     $caves = Get-CaveConnections -Connections $PuzzleInput
-    $paths = Get-PathsFromNode -Caves $caves -Node 'start' -UsedDoubleRevisit $false
+    $pathCount = Get-PathCountFromNode -Caves $caves -Node 'start' -UsedDoubleRevisit $false
 
-    return $paths.Count
+    return $pathCount
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
