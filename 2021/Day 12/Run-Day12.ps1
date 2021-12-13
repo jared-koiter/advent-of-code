@@ -14,7 +14,7 @@ function Get-CaveConnections {
         }
         else {
             $caves.$start = @{
-                IsLarge = ($start -cmatch '^[A-Z]*$')
+                IsSmall = ($start -cnotmatch '^[A-Z]*$')
                 Connections = @(
                     $end
                 )
@@ -26,7 +26,7 @@ function Get-CaveConnections {
         }
         else {
             $caves.$end = @{
-                IsLarge = ($end -cmatch '^[A-Z]*$')
+                IsSmall = ($end -cnotmatch '^[A-Z]*$')
                 Connections = @(
                     $start
                 )
@@ -64,7 +64,7 @@ function Get-PathsFromNode {
     }
 
     # only record visits to small caves
-    if (-not $Caves.$Node.IsLarge) {
+    if ($Caves.$Node.IsSmall) {
         $VisitedSmallCaves += $Node
     }
 
