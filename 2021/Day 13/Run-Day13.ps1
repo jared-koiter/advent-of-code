@@ -1,3 +1,32 @@
+function Get-DotPlot {
+    [CmdletBinding()]
+    param (
+        $Dots
+    )
+    
+    $maxX = ($Dots.x | Measure-Object -Maximum).Maximum
+    $maxY = ($Dots.y | Measure-Object -Maximum).Maximum
+
+    $plot = ,(,'.' * ($maxX+1)) * ($maxY+1)
+
+    foreach ($dot in $dots) {
+        $row = $plot[$dot.y] | ForEach-Object { $_ }
+        $row[$dot.x] = '#'
+        $plot[$dot.y] = $row
+    }
+
+    $plotString = "`n"
+    for ($y = 0; $y -le $maxY; $y++) {
+        for ($x = 0; $x -le $maxX; $x++) {
+            $plotString += "$($plot[$y][$x]) "
+        }
+        $plotString += "`n"
+    }
+
+    return $plotString
+}
+
+
 function Run-Puzzle1 {
     [CmdletBinding()]
     param (
@@ -58,7 +87,51 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    #TODO
+    $dots = @()
+    $instructions = @()
+    foreach ($line in $PuzzleInput) {
+        if ($line) {
+            if ($line -like 'fold along*') {
+                $null, $null, $instruction = $line -split ' '
+                $instructions += $instruction
+            }
+            else {
+                $x, $y = $line -split ','
+                $dots += @{
+                    x = [int]$x
+                    y = [int]$y
+                }
+            }
+        }
+    }
+
+    foreach ($instruction in $instructions) {
+        $foldDir, $coord = $instruction -split '='
+        $newDots = @()
+
+        if ($foldDir -eq 'x') {
+            $sameDir = 'y'
+        }
+        else {
+            $sameDir = 'x'
+        }
+
+        foreach ($dot in $dots) {
+            if ($dot.$foldDir -gt $coord) {
+                $newDots += @{
+                    $foldDir = ($coord - [Math]::Abs($dot.$foldDir - $coord))
+                    $sameDir = $dot.$sameDir
+                }
+            }
+            else {
+                $newDots += $dot
+            }
+        }
+
+        $dots = $newDots
+    }
+
+    return (Get-DotPlot -Dots $dots)
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
