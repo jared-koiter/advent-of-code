@@ -24,22 +24,16 @@ function Get-ShortestPathCost {
     $endCoord = "$maxRow,$maxCol"
 
     $nodes = @{}
-    for ($i = 0; $i -le $maxRow; $i++) {
-        for ($j = 0; $j -le $maxCol; $j++) {
-            $nodes."$i,$j" = @{
-                Value = $map[$i][$j]
-                Distance = [int]::MaxValue
-                Previous = ''
-            }
-        }
+    $nodes.$startCoord = @{
+        Distance = 0
+        Previous = ''
     }
-    $nodes.$startCoord.Distance = $map[0][0] = 0
 
     while ($nodes.Keys -gt 0) {
         $shortestDistance = (($nodes.Keys | ForEach-Object { $nodes.$_.Distance }) | Measure-Object -Minimum).Minimum
         $shortestDistanceNode = $nodes.Keys | Where-Object { $nodes.$_.Distance -eq $shortestDistance } | Select-Object -First 1
 
-        Write-Host "Checking $shortestDistanceNode" -ForegroundColor DarkCyan
+        #Write-Host "Checking $shortestDistanceNode" -ForegroundColor DarkCyan
 
         if ($shortestDistanceNode -eq $endCoord) {
             break
@@ -50,12 +44,18 @@ function Get-ShortestPathCost {
             $rightNeighbour = "$x,$($y+1)"
             $rightNeighbourDistance = $map[$x][$y+1]
             $rightTotalDistance = ($rightNeighbourDistance + $shortestDistance)
-            #Write-Host "Right is $rightNeighbour, total distance is $rightTotalDistance" -ForegroundColor DarkMagenta
 
-            if ($rightTotalDistance -lt $nodes.$rightNeighbour.Distance) {
-                #Write-Host "Updating $rightNeighbour to $rightTotalDistance (previously $($nodes.$rightNeighbour.Distance))" -ForegroundColor Magenta
-                $nodes.$rightNeighbour.Distance = $rightTotalDistance
-                $nodes.$rightNeighbour.Previous = $shortestDistanceNode
+            if ($nodes.$rightNeighbour) {
+                if ($rightTotalDistance -lt $nodes.$rightNeighbour.Distance) {
+                    $nodes.$rightNeighbour.Distance = $rightTotalDistance
+                    $nodes.$rightNeighbour.Previous = $shortestDistanceNode
+                }                
+            }
+            else {
+                $nodes.$rightNeighbour = @{
+                    Distance = $rightTotalDistance
+                    Previous = $shortestDistanceNode
+                }
             }
         }
 
@@ -63,12 +63,18 @@ function Get-ShortestPathCost {
             $botNeighbour = "$($x+1),$y"
             $botNeighbourDistance = $map[$x+1][$y]
             $botTotalDistance = ($botNeighbourDistance + $shortestDistance)
-            #Write-Host "Bot is $botNeighbour, total distance is $botTotalDistance" -ForegroundColor DarkGreen
 
-            if ($botTotalDistance -lt $nodes.$botNeighbour.Distance) {
-                #Write-Host "Updating $botNeighbour to $botTotalDistance (previously $($nodes.$botNeighbour.Distance))" -ForegroundColor Green
-                $nodes.$botNeighbour.Distance = $botTotalDistance
-                $nodes.$botNeighbour.Previous = $shortestDistanceNode
+            if ($nodes.$botNeighbour) {
+                if ($botTotalDistance -lt $nodes.$botNeighbour.Distance) {
+                    $nodes.$botNeighbour.Distance = $botTotalDistance
+                    $nodes.$botNeighbour.Previous = $shortestDistanceNode
+                }                
+            }
+            else {
+                $nodes.$botNeighbour = @{
+                    Distance = $botTotalDistance
+                    Previous = $shortestDistanceNode
+                }
             }
         }
 
