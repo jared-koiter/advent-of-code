@@ -1,3 +1,29 @@
+function Run-PolymerSteps {
+    [CmdletBinding()]
+    param (
+        $Template,
+        $Rules,
+        $RepetitionCount
+    )
+
+    for ($i = 0; $i -lt $RepetitionCount; $i++) {
+        [System.Collections.ArrayList]$newPolymer = $Template | ForEach-Object { $_ }
+
+        for ($j = ($template.Count - 2); $j -ge 0; $j--) {
+            $pair = "$($template[$j])$($template[$j+1])"
+            
+            if ($Rules.$pair) {
+                $newPolymer.Insert($j+1, $Rules.$pair)
+            }
+        }
+
+        $Template = $newPolymer
+    }
+
+    $counts = $Template | Group-Object -NoElement | ForEach-Object { $_.Count } | Measure-Object -Maximum -Minimum
+    return ($counts.Maximum - $counts.Minimum)
+}
+
 function Run-Puzzle1 {
     [CmdletBinding()]
     param (
@@ -11,24 +37,7 @@ function Run-Puzzle1 {
         $rules.$pair = $insert
     }
 
-    $repetitionCount = 10    
-    for ($i = 0; $i -lt $repetitionCount; $i++) {
-        [System.Collections.ArrayList]$newPolymer = $template | ForEach-Object { $_ }
-
-        for ($j = ($template.Count - 2); $j -ge 0; $j--) {
-            $pair = "$($template[$j])$($template[$j+1])"
-            
-            if ($rules.$pair) {
-                $newPolymer.Insert($j+1, $rules.$pair)
-            }
-        }
-
-        $template = $newPolymer
-    }
-
-    $counts = $template | Group-Object -NoElement | ForEach-Object { $_.Count } | Measure-Object -Maximum -Minimum
-
-    return ($counts.Maximum - $counts.Minimum)
+    return Run-PolymerSteps -Template $template -Rules $rules -RepetitionCount 10
 }
 
 function Run-Puzzle2 {
