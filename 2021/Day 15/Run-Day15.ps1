@@ -123,9 +123,8 @@ function Get-DistanceToTargetEstimate {
         [int] $TargetRow,
         [int] $TargetCol
     )
-
-    $averageDistanceValue = 1
-    return [Math]::Floor((($TargetRow - $CurrentRow) + ($TargetCol - $CurrentCol)) * $averageDistanceValue)
+    #return 0
+    return (($TargetRow - $CurrentRow) + ($TargetCol - $CurrentCol))
 }
 
 function Get-ShortestPathCost {
@@ -141,19 +140,26 @@ function Get-ShortestPathCost {
 
     $nodes = @{}
     $nodes.$startCoord = @{
-        FValue = (Get-DistanceToTargetEstimate -CurrentRow 0 -CurrentCol 0 -TargetRow $maxRow -TargetCol $maxCol)
+        FValue = [int](Get-DistanceToTargetEstimate -CurrentRow 0 -CurrentCol 0 -TargetRow $maxRow -TargetCol $maxCol)
         Distance = 0
         Previous = ''
+        Visited = $true
+    }
+
+    [int]$lowestFValue = $nodes.$startCoord.FValue
+    $queue = @{
+        $lowestFValue = [System.Collections.ArrayList] @( $startCoord )
     }
 
     while ($nodes.Count -gt 0) {
-        $fValue = [int]::MaxValue
-        foreach ($key in $nodes.Keys) {
-            if ($nodes.$key.FValue -lt $fValue) {
-                $fValue = $nodes.$key.FValue
-                $node = $key
-            }
+        if (-not $queue.$lowestFValue) {
+            $queue.Remove($lowestFValue)
+            [int]$lowestFValue = ($queue.Keys | Where-Object { $queue.$_ } | Measure-Object -Minimum).Minimum
         }
+        $node = ($queue.$lowestFValue)[0]
+        ($queue.$lowestFValue).RemoveAt(0)
+
+        #Write-Host "Checking $node - $lowestFValue - $($nodes.$node.Distance)" -ForegroundColor DarkCyan
 
         if ($node -eq $endCoord) {
             break
@@ -165,12 +171,22 @@ function Get-ShortestPathCost {
             if ($neighbour -eq $nodes.$node.Previous) {
                 continue
             }
-            [int]$nRow, [int]$nCol = $neighbour -split ','
-            $neighbourDistance = ($map[$nRow][$nCol] + $nodes.$node.Distance)
-            $neighbourFValue = $neighbourDistance + (Get-DistanceToTargetEstimate -CurrentRow $row -CurrentCol $col -TargetRow $nRow -TargetCol $nCol)
 
+            if ($nodes.$neighbour.Visited) {
+                continue
+            }
+
+            [int]$nRow, [int]$nCol = $neighbour -split ','
+            [int]$neighbourDistance = ($map[$nRow][$nCol] + $nodes.$node.Distance)
+            [int]$neighbourFValue = $neighbourDistance + (Get-DistanceToTargetEstimate -CurrentRow $nRow -CurrentCol $nCol -TargetRow $maxRow -TargetCol $maxCol)
+
+            $addToQueue = $false
             if ($nodes.$neighbour) {
-                if ($neighbourFValue -lt $nodes.$neighbour.FValue) {
+                $existingFValue = $nodes.$neighbour.FValue
+                if ($neighbourFValue -lt $existingFValue) {
+                    [System.Collections.ArrayList] $queue.$existingFValue = @($queue.$existingFValue | Where-Object { $_ -ne $neighbour })
+                    $addToQueue = $true
+
                     $nodes.$neighbour.FValue   = $neighbourFValue
                     $nodes.$neighbour.Distance = $neighbourDistance
                     $nodes.$neighbour.Previous = $node
@@ -181,11 +197,23 @@ function Get-ShortestPathCost {
                     FValue   = $neighbourFValue
                     Distance = $neighbourDistance
                     Previous = $node
+                    Visted   = $false
+                }
+
+                $addToQueue = $true
+            }
+
+            if ($addToQueue) {
+                if ($queue.$neighbourFValue) {
+                    $index = $queue.$neighbourFValue.Add($neighbour)
+                }
+                else {
+                    $queue.$neighbourFValue = [System.Collections.ArrayList] @( $neighbour )
                 }
             }
         }
 
-        $nodes.Remove($node)
+        $nodes.$node.Visited = $true
     }
 
     return $nodes.$endCoord.Distance
