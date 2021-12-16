@@ -101,7 +101,7 @@ function Get-AdjacentCoords {
     }
 
     if ($Row -gt 0) {
-        #$adjacents += "$($Row - 1),$Col"
+        $adjacents += "$($Row - 1),$Col"
     }
 
     if ($Col -lt $MaxCol) {
@@ -109,7 +109,7 @@ function Get-AdjacentCoords {
     }
 
     if ($Col -gt 0) {
-        #$adjacents += "$Row,$($Col - 1)"
+        $adjacents += "$Row,$($Col - 1)"
     }
 
     return $adjacents
