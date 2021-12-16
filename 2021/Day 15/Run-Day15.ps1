@@ -12,7 +12,7 @@ function Get-CaveMap {
     return $map
 }
 
-function Get-ShortestPathCost {
+function Get-ShortestPathCostOld {
     [CmdletBinding()]
     param (
         $Map
@@ -83,6 +83,114 @@ function Get-ShortestPathCost {
 
     return $nodes.$endCoord.Distance
 }
+
+function Get-AdjacentCoords {
+    [CmdletBinding()]
+    param (
+        $Row,
+        $Col,
+        $MaxRow,
+        $MaxCol
+    )
+
+    $adjacents = @()
+
+    # assumes that the starting row/col are already valid indexes
+    if ($Row -lt $MaxRow) {
+        $adjacents += "$($Row + 1),$Col"
+    }
+
+    if ($Row -gt 0) {
+        #$adjacents += "$($Row - 1),$Col"
+    }
+
+    if ($Col -lt $MaxCol) {
+        $adjacents += "$Row,$($Col + 1)"
+    }
+
+    if ($Col -gt 0) {
+        #$adjacents += "$Row,$($Col - 1)"
+    }
+
+    return $adjacents
+}
+
+function Get-DistanceToTargetEstimate {
+    [CmdletBinding()]
+    param (
+        [int] $CurrentRow,
+        [int] $CurrentCol,
+        [int] $TargetRow,
+        [int] $TargetCol
+    )
+
+    $averageDistanceValue = 1
+    return [Math]::Floor((($TargetRow - $CurrentRow) + ($TargetCol - $CurrentCol)) * $averageDistanceValue)
+}
+
+function Get-ShortestPathCost {
+    [CmdletBinding()]
+    param (
+        $Map
+    )
+
+    $maxRow = $Map.Count - 1
+    $maxCol = $Map[0].Count - 1
+    $startCoord = '0,0'
+    $endCoord = "$maxRow,$maxCol"
+
+    $nodes = @{}
+    $nodes.$startCoord = @{
+        FValue = (Get-DistanceToTargetEstimate -CurrentRow 0 -CurrentCol 0 -TargetRow $maxRow -TargetCol $maxCol)
+        Distance = 0
+        Previous = ''
+    }
+
+    while ($nodes.Count -gt 0) {
+        $fValue = [int]::MaxValue
+        foreach ($key in $nodes.Keys) {
+            if ($nodes.$key.FValue -lt $fValue) {
+                $fValue = $nodes.$key.FValue
+                $node = $key
+            }
+        }
+
+        if ($node -eq $endCoord) {
+            break
+        }
+
+        [int]$row, [int]$col = $node -split ','
+        $neighbours = Get-AdjacentCoords -Row $row -Col $col -MaxRow $maxRow -MaxCol $maxCol
+        foreach ($neighbour in $neighbours) {
+            if ($neighbour -eq $nodes.$node.Previous) {
+                continue
+            }
+            [int]$nRow, [int]$nCol = $neighbour -split ','
+            $neighbourDistance = ($map[$nRow][$nCol] + $nodes.$node.Distance)
+            $neighbourFValue = $neighbourDistance + (Get-DistanceToTargetEstimate -CurrentRow $row -CurrentCol $col -TargetRow $nRow -TargetCol $nCol)
+
+            if ($nodes.$neighbour) {
+                if ($neighbourFValue -lt $nodes.$neighbour.FValue) {
+                    $nodes.$neighbour.FValue   = $neighbourFValue
+                    $nodes.$neighbour.Distance = $neighbourDistance
+                    $nodes.$neighbour.Previous = $node
+                }                
+            }
+            else {
+                $nodes.$neighbour = @{
+                    FValue   = $neighbourFValue
+                    Distance = $neighbourDistance
+                    Previous = $node
+                }
+            }
+        }
+
+        $nodes.Remove($node)
+    }
+
+    return $nodes.$endCoord.Distance
+}
+
 
 function Run-Puzzle1 {
     [CmdletBinding()]
