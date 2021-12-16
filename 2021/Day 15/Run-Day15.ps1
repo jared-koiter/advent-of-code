@@ -123,7 +123,7 @@ function Get-DistanceToTargetEstimate {
         [int] $TargetRow,
         [int] $TargetCol
     )
-    #return 0
+    
     return (($TargetRow - $CurrentRow) + ($TargetCol - $CurrentCol))
 }
 
@@ -158,8 +158,6 @@ function Get-ShortestPathCost {
         }
         $node = ($queue.$lowestFValue)[0]
         ($queue.$lowestFValue).RemoveAt(0)
-
-        #Write-Host "Checking $node - $lowestFValue - $($nodes.$node.Distance)" -ForegroundColor DarkCyan
 
         if ($node -eq $endCoord) {
             break
