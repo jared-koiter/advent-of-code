@@ -1,11 +1,11 @@
 function Get-CaveMap {
     [CmdletBinding()]
     param (
-        $Input
+        $MapInput
     )
 
     $map = @()
-    foreach ($line in $Input) {
+    foreach ($line in $MapInput) {
         $map += ,($line.ToCharArray() | ForEach-Object { [int]::Parse($_) }) 
     }
 
@@ -15,11 +15,11 @@ function Get-CaveMap {
 function Get-ExtendedCaveMap {
     [CmdletBinding()]
     param (
-        $Input
+        $MapInput
     )
 
     $map = @()
-    foreach ($line in $PuzzleInput) {
+    foreach ($line in $MapInput) {
         $map += ,($line.ToCharArray() | ForEach-Object { [int]::Parse($_) }) 
     }
 
@@ -186,7 +186,7 @@ function Run-Puzzle1 {
         $PuzzleInput
     )
 
-    $map = Get-CaveMap -Input $PuzzleInput
+    $map = Get-CaveMap -MapInput $PuzzleInput
     return Get-ShortestPathCost -Map $map
 }
 
@@ -196,7 +196,7 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    $map = Get-ExtendedCaveMap -Input $PuzzleInput
+    $map = Get-ExtendedCaveMap -MapInput $PuzzleInput
     return Get-ShortestPathCost -Map $map
 }
 
