@@ -5,83 +5,45 @@ function Get-CaveMap {
     )
 
     $map = @()
-    foreach ($line in $PuzzleInput) {
+    foreach ($line in $Input) {
         $map += ,($line.ToCharArray() | ForEach-Object { [int]::Parse($_) }) 
     }
 
     return $map
 }
 
-function Get-ShortestPathCostOld {
+function Get-ExtendedCaveMap {
     [CmdletBinding()]
     param (
-        $Map
+        $Input
     )
 
-    $maxRow = $Map.Count - 1
-    $maxCol = $Map[0].Count - 1
-    $startCoord = '0,0'
-    $endCoord = "$maxRow,$maxCol"
-
-    $nodes = @{}
-    $nodes.$startCoord = @{
-        Distance = 0
-        Previous = ''
+    $map = @()
+    foreach ($line in $PuzzleInput) {
+        $map += ,($line.ToCharArray() | ForEach-Object { [int]::Parse($_) }) 
     }
 
-    while ($nodes.Keys -gt 0) {
-        $shortestDistance = (($nodes.Keys | ForEach-Object { $nodes.$_.Distance }) | Measure-Object -Minimum).Minimum
-        $shortestDistanceNode = $nodes.Keys | Where-Object { $nodes.$_.Distance -eq $shortestDistance } | Select-Object -First 1
+    $rowCount = $map.Count
+    $colCount = $map[0].Count
+    $tileRepetitionCount = 5
+    $extendedMap = ,(,0 * ($colCount * $tileRepetitionCount)) * ($rowCount * $tileRepetitionCount)
 
-        #Write-Host "Checking $shortestDistanceNode" -ForegroundColor DarkCyan
-
-        if ($shortestDistanceNode -eq $endCoord) {
-            break
-        }
-
-        [int]$x, [int]$y = $shortestDistanceNode -split ','
-        if ($y -ne $maxCol) {
-            $rightNeighbour = "$x,$($y+1)"
-            $rightNeighbourDistance = $map[$x][$y+1]
-            $rightTotalDistance = ($rightNeighbourDistance + $shortestDistance)
-
-            if ($nodes.$rightNeighbour) {
-                if ($rightTotalDistance -lt $nodes.$rightNeighbour.Distance) {
-                    $nodes.$rightNeighbour.Distance = $rightTotalDistance
-                    $nodes.$rightNeighbour.Previous = $shortestDistanceNode
-                }                
-            }
-            else {
-                $nodes.$rightNeighbour = @{
-                    Distance = $rightTotalDistance
-                    Previous = $shortestDistanceNode
+    for ($tileRow = 0; $tileRow -lt 5; $tileRow++) {
+        for ($tileCol = 0; $tileCol -lt 5; $tileCol++) {
+            for ($mapRow = 0; $mapRow -lt $rowCount; $mapRow++) {
+                $row = $extendedMap[($mapRow + ($tileRow * $rowCount))] | ForEach-Object { $_ }
+                for ($mapCol = 0; $mapCol -lt $colCount; $mapCol++) {
+                    $originalValue = $map[$mapRow][$mapCol]            
+                    $newValue = $originalValue + $tileRow + $tileCol
+                    $newValue = if ($newValue -gt 9) { $newValue % 10 + 1 } else { $newValue }
+                    $row[($mapCol + ($tileCol * $colCount))] = $newValue
                 }
+                $extendedMap[($mapRow + ($tileRow * $rowCount))] = $row
             }
         }
-
-        if ($x -ne $maxRow) {
-            $botNeighbour = "$($x+1),$y"
-            $botNeighbourDistance = $map[$x+1][$y]
-            $botTotalDistance = ($botNeighbourDistance + $shortestDistance)
-
-            if ($nodes.$botNeighbour) {
-                if ($botTotalDistance -lt $nodes.$botNeighbour.Distance) {
-                    $nodes.$botNeighbour.Distance = $botTotalDistance
-                    $nodes.$botNeighbour.Previous = $shortestDistanceNode
-                }                
-            }
-            else {
-                $nodes.$botNeighbour = @{
-                    Distance = $botTotalDistance
-                    Previous = $shortestDistanceNode
-                }
-            }
-        }
-
-        $nodes.Remove($shortestDistanceNode)
     }
 
-    return $nodes.$endCoord.Distance
+    return $extendedMap
 }
 
 function Get-AdjacentCoords {
@@ -234,7 +196,8 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    #TODO
+    $map = Get-ExtendedCaveMap -Input $PuzzleInput
+    return Get-ShortestPathCost -Map $map
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
