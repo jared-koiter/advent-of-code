@@ -128,6 +128,39 @@ function Run-Puzzle2 {
     )
 
     $minX, $maxX, $minY, $maxY = Get-TargetArea -CoordString $PuzzleInput
+    $xRange = $minX..$maxX
+    $yRange = $minY..$maxY
+
+    # calculate reasonable ranges for initial velocities that could end up in the target zone
+    $minXVelocity = 0
+    while ($minX -ge 0) {
+        $minXVelocity++
+        $minX -= $minXVelocity
+    }
+    $maxXVelocity = $maxX
+
+    # TODO make this better
+    $minYVelocity = $minY
+    $maxYVelocity = 1000
+
+    $hitCount = 0
+    foreach ($xVelocity in ($minXVelocity..$maxXVelocity)) {
+        foreach ($yVelocity in ($minYVelocity..$maxYVelocity)) {
+            $trajectoryParams = @{
+                XVelocity = $xVelocity
+                YVelocity = $yVelocity
+                XRange = $xRange
+                YRange = $yRange
+            }
+            $targetHit, $x, $y, $maxHeight = Test-Trajectory @trajectoryParams
+
+            if ($targetHit) {
+                $hitCount++
+            }
+        }
+    }
+
+    return $hitCount
 }
 
 $puzzleInput = Get-Content .\input.txt
