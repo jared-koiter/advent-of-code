@@ -84,23 +84,18 @@ function Get-NodeDepth {
     return $depth
 }
 
-function Reduce-Tree {
+function Reduce-TreeByExploding {
     [CmdletBinding()]
     param (
         $NumberTree,
         $RootNodeId
     )
 
-    #Write-Warning "Reducing at $RootNodeId"
-    #Write-Host (Get-TreeAsString -NumberTree $NumberTree -RootNodeId $RootNodeId) -ForegroundColor DarkCyan
-
     $didReduce = $false
-
     $depth = Get-NodeDepth -NumberTree $NumberTree -NodeId $RootNodeId
     if ($depth -eq 4) {
         $leftValue = $NumberTree.$RootNodeId.Left
         $rightValue = $NumberTree.$RootNodeId.Right
-        Write-Warning "Exploding [$leftValue,$rightValue]"
         $parentNode = $NumberTree.$RootNodeId.Parent
 
         # add left value to the next node to the left, if one exists
@@ -162,46 +157,71 @@ function Reduce-Tree {
 
         $didReduce = $true
     }
-    elseif (($NumberTree.$RootNodeId.Left.GetType() -eq [Int32]) -and ($NumberTree.$RootNodeId.Left -gt 9)) {
-        Write-Warning "Splitting $($NumberTree.$RootNodeId.Left)"
-        [Int32]$newLeftValue = [Math]::Floor($NumberTree.$RootNodeId.Left / 2)
-        [Int32]$newRightValue = $NumberTree.$RootNodeId.Left - $newLeftValue
-
-        $newNodeId = (New-Guid).ToString()
-        $newNode = @{
-            Parent = $RootNodeId
-            Left = $newLeftValue
-            Right = $newRightValue
-        }
-        $NumberTree.$newNodeId = $newNode
-        $NumberTree.$RootNodeId.Left = $newNodeId
-
-        $didReduce = $true
-    }
-    elseif (($NumberTree.$RootNodeId.Right.GetType() -eq [Int32]) -and ($NumberTree.$RootNodeId.Right -gt 9)) {
-        Write-Warning "Splitting $($NumberTree.$RootNodeId.Right)"
-        [Int32]$newLeftValue = [Math]::Floor($NumberTree.$RootNodeId.Right / 2)
-        [Int32]$newRightValue = $NumberTree.$RootNodeId.Right - $newLeftValue
-
-        $newNodeId = (New-Guid).ToString()
-        $newNode = @{
-            Parent = $RootNodeId
-            Left = $newLeftValue
-            Right = $newRightValue
-        }
-        $NumberTree.$newNodeId = $newNode
-        $NumberTree.$RootNodeId.Right = $newNodeId
-
-        $didReduce = $true
-    }
 
     # if we didn't reduce at our current node, recursively try reducing at child nodes, left to right
     if ((-not $didReduce) -and ($NumberTree.$RootNodeId.Left.GetType() -ne [Int32])) {
-        $NumberTree, $didReduce = Reduce-Tree -NumberTree $NumberTree -RootNodeId $NumberTree.$RootNodeId.Left
+        $NumberTree, $didReduce = Reduce-TreeByExploding -NumberTree $NumberTree -RootNodeId $NumberTree.$RootNodeId.Left
     }
 
     if ((-not $didReduce) -and ($NumberTree.$RootNodeId.Right.GetType() -ne [Int32])) {
-        $NumberTree, $didReduce = Reduce-Tree -NumberTree $NumberTree -RootNodeId $NumberTree.$RootNodeId.Right
+        $NumberTree, $didReduce = Reduce-TreeByExploding -NumberTree $NumberTree -RootNodeId $NumberTree.$RootNodeId.Right
+    }
+
+    return $NumberTree, $didReduce
+}
+
+function Reduce-TreeBySplitting {
+    [CmdletBinding()]
+    param (
+        $NumberTree,
+        $RootNodeId
+    )
+
+    $didReduce = $false
+    if ($NumberTree.$RootNodeId.Left.GetType() -eq [Int32]) {
+        if ($NumberTree.$RootNodeId.Left -gt 9) {
+            [Int32]$newLeftValue = [Math]::Floor($NumberTree.$RootNodeId.Left / 2)
+            [Int32]$newRightValue = $NumberTree.$RootNodeId.Left - $newLeftValue
+
+            $newNodeId = (New-Guid).ToString()
+            $newNode = @{
+                Parent = $RootNodeId
+                Left = $newLeftValue
+                Right = $newRightValue
+            }
+            $NumberTree.$newNodeId = $newNode
+            $NumberTree.$RootNodeId.Left = $newNodeId
+
+            $didReduce = $true
+        }
+    }
+    else {
+        $NumberTree, $didReduce = Reduce-TreeBySplitting -NumberTree $NumberTree -RootNodeId $NumberTree.$RootNodeId.Left
+    }
+
+    if ($didReduce) {
+        return $NumberTree, $didReduce
+    }
+
+    if ($NumberTree.$RootNodeId.Right.GetType() -eq [Int32]) {
+        if ($NumberTree.$RootNodeId.Right -gt 9) {
+            [Int32]$newLeftValue = [Math]::Floor($NumberTree.$RootNodeId.Right / 2)
+            [Int32]$newRightValue = $NumberTree.$RootNodeId.Right - $newLeftValue
+
+            $newNodeId = (New-Guid).ToString()
+            $newNode = @{
+                Parent = $RootNodeId
+                Left = $newLeftValue
+                Right = $newRightValue
+            }
+            $NumberTree.$newNodeId = $newNode
+            $NumberTree.$RootNodeId.Right = $newNodeId
+
+            $didReduce = $true
+        }
+    }
+    else {
+        $NumberTree, $didReduce = Reduce-TreeBySplitting -NumberTree $NumberTree -RootNodeId $NumberTree.$RootNodeId.Right
     }
 
     return $NumberTree, $didReduce
@@ -258,10 +278,11 @@ function Run-Puzzle1 {
         $rightTree.$rightRootId.Parent = $sumRootId
 
         $sumTree = $sumTree + $leftTree + $rightTree
-        Write-Host (Get-TreeAsString -NumberTree $sumTree -RootNodeId $sumRootId) -ForegroundColor Gray
         do {
-            $sumTree, $didReduce = Reduce-Tree -NumberTree $sumTree -RootNodeId $sumRootId
-            Write-Host (Get-TreeAsString -NumberTree $sumTree -RootNodeId $sumRootId) -ForegroundColor Gray
+            $sumTree, $didReduce = Reduce-TreeByExploding -NumberTree $sumTree -RootNodeId $sumRootId
+            if (-not $didReduce) {
+                $sumTree, $didReduce = Reduce-TreeBySplitting -NumberTree $sumTree -RootNodeId $sumRootId
+            }
         }
         while ($didReduce)
 
@@ -269,11 +290,8 @@ function Run-Puzzle1 {
         Write-Host ""
         $leftRootId = $sumRootId
         $leftTree = $sumTree
-
-        break
     }
 
-    Write-Host (Get-TreeAsString -NumberTree $leftTree -RootNodeId $leftRootId)
     return (Get-TreeMagnitude -NumberTree $leftTree -RootNodeId $leftRootId)
 }
 
