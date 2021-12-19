@@ -286,8 +286,8 @@ function Run-Puzzle1 {
         }
         while ($didReduce)
 
-        Write-Host "=  $(Get-TreeAsString -NumberTree $sumTree -RootNodeId $sumRootId)" -ForegroundColor Green
-        Write-Host ""
+        #Write-Host "=  $(Get-TreeAsString -NumberTree $sumTree -RootNodeId $sumRootId)" -ForegroundColor Green
+        #Write-Host ""
         $leftRootId = $sumRootId
         $leftTree = $sumTree
     }
