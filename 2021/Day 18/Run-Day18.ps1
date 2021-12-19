@@ -263,8 +263,8 @@ function Run-Puzzle1 {
         $rightRootId = (New-Guid).ToString()
         $rightTree = Build-NumberTree -NumberArray ($PuzzleInput[$i] | ConvertFrom-Json) -NodeId $rightRootId
 
-        Write-Host "   $(Get-TreeAsString -NumberTree $leftTree -RootNodeId $leftRootId)" -ForegroundColor DarkCyan
-        Write-Host "+  $(Get-TreeAsString -NumberTree $rightTree -RootNodeId $rightRootId)" -ForegroundColor DarkMagenta
+        #Write-Host "   $(Get-TreeAsString -NumberTree $leftTree -RootNodeId $leftRootId)" -ForegroundColor DarkCyan
+        #Write-Host "+  $(Get-TreeAsString -NumberTree $rightTree -RootNodeId $rightRootId)" -ForegroundColor DarkMagenta
 
         $sumRootId = (New-Guid).ToString()
         $sumTree = @{
