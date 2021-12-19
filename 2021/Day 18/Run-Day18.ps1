@@ -301,7 +301,49 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    #TODO
+    $greatestMagnitude = 0
+    for ($i = 0; $i -lt $PuzzleInput.Count; $i++) {
+        for ($j = 0; $j -lt $PuzzleInput.Count; $j++) {
+            if ($i -eq $j) {
+                # don't test for adding a number to itself
+                continue
+            }
+
+            $leftRootId = (New-Guid).ToString()
+            $leftTree = Build-NumberTree -NumberArray ($PuzzleInput[$i] | ConvertFrom-Json) -NodeId $leftRootId
+
+            $rightRootId = (New-Guid).ToString()
+            $rightTree = Build-NumberTree -NumberArray ($PuzzleInput[$j] | ConvertFrom-Json) -NodeId $rightRootId
+
+            #Write-Host "$(Get-TreeAsString -NumberTree $leftTree -RootNodeId $leftRootId) + $(Get-TreeAsString -NumberTree $rightTree -RootNodeId $rightRootId)" -ForegroundColor Green
+
+            $sumRootId = (New-Guid).ToString()
+            $sumTree = @{
+                $sumRootId = @{
+                    Parent = $null
+                    Left = $leftRootId
+                    Right = $rightRootId
+                }
+            }
+            $leftTree.$leftRootId.Parent = $sumRootId
+            $rightTree.$rightRootId.Parent = $sumRootId
+
+            $sumTree = $sumTree + $leftTree + $rightTree
+            do {
+                $sumTree, $didReduce = Reduce-TreeByExploding -NumberTree $sumTree -RootNodeId $sumRootId
+                if (-not $didReduce) {
+                    $sumTree, $didReduce = Reduce-TreeBySplitting -NumberTree $sumTree -RootNodeId $sumRootId
+                }
+            }
+            while ($didReduce)
+
+            $sumMagnitude = Get-TreeMagnitude -NumberTree $sumTree -RootNodeId $sumRootId
+            #Write-Host "Magnitude of $sumMagnitude" -ForegroundColor Yellow
+            $greatestMagnitude = [Math]::Max($sumMagnitude, $greatestMagnitude)
+        }
+    }
+
+    return $greatestMagnitude
 }
 
 [string[]]$puzzleInput = Get-Content .\input.txt
