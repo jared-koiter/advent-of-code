@@ -7,7 +7,6 @@ $scoreRef = @{
     Z = 3 # Scissors
 }
 
-# i beats j
 $winRef = @{
     1 = 3
     2 = 1
@@ -43,15 +42,11 @@ function Get-Puzzle1RoundScore {
         $OpponentInput
     )
 
-    $score = $scoreRef.$YourInput
-
-    $score += switch (Get-RoundWinner -Input1 $scoreRef.$YourInput -Input2 $scoreRef.$OpponentInput) {
-        -1 { 0 }
-        0  { 3 }
-        1  { 6 }
+    switch (Get-RoundWinner -Input1 $YourInput -Input2 $OpponentInput) {
+        -1 { return $YourInput }
+        0  { return $YourInput + 3 }
+        1  { return $YourInput + 6 }
     }
-
-    return $score
 }
 
 function Get-Puzzle2RoundScore {
@@ -61,22 +56,17 @@ function Get-Puzzle2RoundScore {
         $OpponentInput
     )
 
-    #if lose, add losing score
-    #if tie, add opponent input score
-    #if win, add winning score
-    $score = switch ($YourGoal) {
+    switch ($YourGoal) {
         'X' { # lose
-            $winRef.($scoreRef.$OpponentInput)
-        } 
+            return $winRef.($OpponentInput)
+        }
         'Y' { # tie
-            3 + $scoreRef.$OpponentInput
-        } 
+            return 3 + $OpponentInput
+        }
         'Z' { # win
-            6 + ($winRef.GetEnumerator() | Where-Object { $_.Value -eq $scoreRef.$OpponentInput }).Name
-        } 
+            return 6 + ($winRef.GetEnumerator() | Where-Object { $_.Value -eq $OpponentInput }).Name
+        }
     }
-
-    return $score
 }
 
 function Run-Puzzle1 {
@@ -88,7 +78,7 @@ function Run-Puzzle1 {
     $totalScore = 0
     foreach ($round in $PuzzleInput) {
         [string]$opponentInput, [string]$yourInput = $round[0,2]
-        $totalScore += Get-Puzzle1RoundScore -YourInput $yourInput -OpponentInput $opponentInput
+        $totalScore += Get-Puzzle1RoundScore -YourInput $scoreRef.$yourInput -OpponentInput $scoreRef.$opponentInput
     }
 
     return $totalScore
@@ -103,7 +93,7 @@ function Run-Puzzle2 {
     $totalScore = 0
     foreach ($round in $PuzzleInput) {
         [string]$opponentInput, [string]$yourGoal = $round[0,2]
-        $totalScore += Get-Puzzle2RoundScore -YourGoal $yourGoal -OpponentInput $opponentInput
+        $totalScore += Get-Puzzle2RoundScore -YourGoal $yourGoal -OpponentInput $scoreRef.$opponentInput
     }
 
     return $totalScore
