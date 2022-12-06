@@ -1,5 +1,5 @@
 function Run-Puzzle1 {
-    [CmdletBinding()]    
+    [CmdletBinding()]
     param (
         $PuzzleInput
     )
@@ -21,7 +21,7 @@ function Run-Puzzle1 {
 }
 
 function Run-Puzzle2 {
-    [CmdletBinding()]    
+    [CmdletBinding()]
     param (
         $PuzzleInput
     )

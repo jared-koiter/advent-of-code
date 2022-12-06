@@ -28,7 +28,7 @@ function Run-Puzzle1 {
         $compartmentSize = $rucksack.Length / 2
         $firstCompartment = $rucksack.Substring(0, $compartmentSize).ToCharArray() | Sort-Object -CaseSensitive | Get-Unique
         $secondCompartment = $rucksack.Substring($rucksack.Length - $compartmentSize, $compartmentSize).ToCharArray() | Sort-Object -CaseSensitive | Get-Unique
-        
+
         :outer for ($i = 0; $i -lt $firstCompartment.Length; $i++) {
             for ($j = 0; $j -lt $secondCompartment.Length; $j++) {
                 if ($firstCompartment[$i] -ceq $secondCompartment[$j]) {
