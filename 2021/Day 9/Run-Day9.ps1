@@ -1,11 +1,11 @@
 function Get-HeightMap {
     [CmdletBinding()]
     param (
-        $Input
+        $MapInput
     )
 
     $map = @()
-    foreach ($line in $PuzzleInput) {
+    foreach ($line in $MapInput) {
         $map += ,($line.ToCharArray() | ForEach-Object { [int]::Parse($_) }) 
     }
 
@@ -49,7 +49,7 @@ function Run-Puzzle1 {
         $PuzzleInput
     )
 
-    $map = Get-HeightMap -Input $PuzzleInput
+    $map = Get-HeightMap -MapInput $PuzzleInput
     $maxRow = $map.Count - 1
     $maxCol = $map[0].Count - 1
 
@@ -121,7 +121,7 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    $map = Get-HeightMap -Input $PuzzleInput
+    $map = Get-HeightMap -MapInput $PuzzleInput
     $maxRow = $map.Count - 1
     $maxCol = $map[0].Count - 1
 
