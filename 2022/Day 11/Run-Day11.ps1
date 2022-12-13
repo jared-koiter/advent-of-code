@@ -5,6 +5,7 @@ function Parse-Input {
     )
 
     $monkeys = @()
+    $commonDivisor = 1
 
     # assume each block is the same number of lines (6 + 1 whitespace = 7)
     for ($i = 0; $i -lt $MonkeyInput.Count; $i += 7) {
@@ -15,9 +16,9 @@ function Parse-Input {
             Test = @{}
             InspectCount = 0
         }
-        
+
         # parse starting items (starts at 18th character)
-        $newMonkey.Items = [bigint[]]($MonkeyInput[$i+1].Substring(18) -split ', ')
+        $newMonkey.Items = [int[]]($MonkeyInput[$i+1].Substring(18) -split ', ')
 
         # parse operation (starts at 19th character)
         $operationText = $MonkeyInput[$i+2].Substring(19)
@@ -29,9 +30,12 @@ function Parse-Input {
         $newMonkey.Test.FalseCase   = [int]($MonkeyInput[$i+5] -split ' ' | Select-Object -Last 1)
 
         $monkeys += $newMonkey
+
+        # update common divisor
+        $commonDivisor *= $newMonkey.Test.DivisibleBy
     }
 
-    return $monkeys
+    return $monkeys, $commonDivisor
 }
 
 # currently only handles * and + operations
@@ -61,13 +65,21 @@ function Play-Round {
     [CmdletBinding()]
     param (
         $Monkeys,
-        $WorryReduction
+        $WorryReduction,
+        $CommonDivisor
     )
+
+    # since all monkeys use division by primes, we can use Chinese Remainder Theorem to keep levels manageable
+    # NOTE: I do not understand the basis for this math very well, solution is a result of having to read up 
+    # on other solutions and then on some math theory before I was able to build it here :)
 
     foreach ($monkey in $Monkeys) {
         $monkey.InspectCount += $monkey.Items.Count
         foreach ($item in $monkey.Items) {
-            $item = (Get-OperationResult -Operation $monkey.Operation -OldValue $item)/$WorryReduction
+            $item = (Get-OperationResult -Operation $monkey.Operation -OldValue $item)
+            $item = [Math]::Floor($item / $WorryReduction)
+            $item = $item % $commonDivisor # use the remainder of the shared divisor to keep numbers down
+
             if ($item % $monkey.Test.DivisibleBy -eq 0) {
                 $Monkeys[$monkey.Test.TrueCase].Items += $item
             }
@@ -85,12 +97,12 @@ function Run-Puzzle1 {
         $PuzzleInput
     )
 
-    $monkeys = Parse-Input -MonkeyInput $PuzzleInput
+    $monkeys, $commonDivisor = Parse-Input -MonkeyInput $PuzzleInput
     $roundCount = 20
     $worryReduction = 3
-    
+
     for ($i = 0; $i -lt $roundCount; $i++) {
-        Play-Round -Monkeys $monkeys -WorryReduction $worryReduction
+        Play-Round -Monkeys $monkeys -WorryReduction $worryReduction -CommonDivisor $commonDivisor
     }
 
     $firstMost, $secondMost = $monkeys.InspectCount | Sort-Object -Descending | Select-Object -First 2
@@ -103,13 +115,12 @@ function Run-Puzzle2 {
         $PuzzleInput
     )
 
-    $monkeys = Parse-Input -MonkeyInput $PuzzleInput
+    $monkeys, $commonDivisor = Parse-Input -MonkeyInput $PuzzleInput
     $roundCount = 10000
     $worryReduction = 1
-    
+
     for ($i = 0; $i -lt $roundCount; $i++) {
-        if (($i % 1000) -eq 0) { Write-Host "Round $i" -ForegroundColor Green }
-        Play-Round -Monkeys $monkeys -WorryReduction $worryReduction
+        Play-Round -Monkeys $monkeys -WorryReduction $worryReduction -CommonDivisor $commonDivisor
     }
 
     $firstMost, $secondMost = $monkeys.InspectCount | Sort-Object -Descending | Select-Object -First 2
